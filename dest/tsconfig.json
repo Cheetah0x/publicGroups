@@ -1,0 +1,35 @@
+{
+    "compilerOptions": {
+        "outDir": "dest",
+        "rootDir": "./",
+        "target": "ES2020",
+        "lib": ["DOM", "ESNext", "ES2017.Object"],
+        "module": "ES2020",
+        "moduleResolution": "Node",
+        "strict": true,
+        "declaration": true,
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true,
+        "downlevelIteration": true,
+        "inlineSourceMap": true,
+        "declarationMap": true,
+        "importHelpers": true,
+        "resolveJsonModule": true,
+        "composite": true,
+        "skipLibCheck": true,
+        "allowImportingTsExtensions": true,
+        "noEmit": false, // Change this to false to emit compiled files
+        "baseUrl": "./",
+        "paths": {
+            "@contracts/*": ["contracts/*"]
+        }
+    },
+    "include": [
+        "src",
+        "contracts/*",
+        "target/**/*.json",
+        "**/*.json",
+        "**/*"
+    ],
+    "exclude": ["node_modules", "dist", "build"]
+}

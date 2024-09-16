@@ -1,0 +1,35 @@
+{
+    "compilerOptions": {
+      "outDir": "dest",
+      "rootDir": "./",
+      "target": "ES2020",
+      "lib": ["DOM", "ESNext", "ES2017.Object"],
+      "module": "ESNext",                // Change to "ESNext"
+      "moduleResolution": "Node",        // Change to "Node"
+      "strict": true,
+      "declaration": true,
+      "allowSyntheticDefaultImports": true,
+      "esModuleInterop": true,
+      "downlevelIteration": true,
+      "inlineSourceMap": true,
+      "declarationMap": true,
+      "importHelpers": true,
+      "resolveJsonModule": true,
+      "composite": true,
+      "skipLibCheck": true,
+      "noEmit": false,
+      "baseUrl": "./",
+      "paths": {
+        "@contracts/*": ["contracts/*"]
+      }
+    },
+    "include": [
+      "src/**/*.ts",
+      "contracts/**/*.ts",
+      "publicgroups/**/*.ts",
+      "publicgroups/target/**/*.json", // Include JSON files
+      "addresses.json"                 // Include if imported
+    ],
+    "exclude": ["node_modules", "dist", "build", "dest"]
+  }
+  

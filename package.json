@@ -1,0 +1,22 @@
+{
+  "name": "public-groups-root",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "yarn clean && tsc -b",
+    "build:dev": "tsc -b --watch",
+    "clean": "rm -rf ./dest tsconfig.tsbuildinfo",
+    "start": "yarn build && DEBUG='PublicGroups' node ./dest/index.js"
+  },
+  "dependencies": {
+    "@aztec/accounts": "^0.55.0",
+    "@aztec/aztec.js": "^0.55.0",
+    "@aztec/noir-contracts.js": "^0.55.0",
+    "@types/node": "^22.5.4",
+    "typescript": "^5.6.2"
+  }
+  
+}
