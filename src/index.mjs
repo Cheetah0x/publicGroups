@@ -73,6 +73,14 @@ async function main() {
     await make_payment_alice_admin(group_contract_alice, adminAddress, aliceAddress, 100);
 
     await get_balance_alice_admin(group_contract_admin, adminAddress, aliceAddress);
+
+    //split the balance between alice and bob
+    //make debtors an array sized 10 with 0 address as the other 8 elements
+    const debtors = [aliceAddress, bobAddress, AztecAddress.ZERO, AztecAddress.ZERO, AztecAddress.ZERO, AztecAddress.ZERO, AztecAddress.ZERO, AztecAddress.ZERO, AztecAddress.ZERO, AztecAddress.ZERO];
+    const participants = 2;
+    await split_group_balance(group_contract_admin, adminAddress, debtors, participants, 100);
+    await get_balance_alice_admin(group_contract_admin, adminAddress, aliceAddress);
+    await get_balance_alice_admin(group_contract_admin, adminAddress, bobAddress); // this is balance between alice and bob
   } else {
     console.log("No wallets found");
   }
@@ -165,6 +173,14 @@ async function get_balance_alice_admin(group_contract_admin, adminAddress, alice
 async function make_payment_alice_admin(group_contract_alice, aliceAddress, adminAddress, amount) {
   const tx = group_contract_alice.methods.make_payment(aliceAddress, adminAddress, amount).send();
   console.log(`Sent make_payment transaction: ${await tx.getTxHash()}`);
+  const receipt = await tx.wait();
+  console.log(`Transaction mined in block ${receipt.blockNumber}`);
+}
+
+async function split_group_balance(group_contract_admin, adminAddress, debtors, participants, amount) {
+  //in this case the debtors will be an array
+  const tx = group_contract_admin.methods.split_group_balance(adminAddress, debtors, participants, amount).send();
+  console.log(`Sent split_group_balance transaction: ${await tx.getTxHash()}`);
   const receipt = await tx.wait();
   console.log(`Transaction mined in block ${receipt.blockNumber}`);
 }

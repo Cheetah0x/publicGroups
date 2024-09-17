@@ -1,4 +1,5 @@
 // mod test;
+// mod types;
 
 //this will be a little test to make public groups in noir
 
@@ -7,6 +8,11 @@ contract PublicGroups {
 
     use dep::aztec::{prelude::{Map, PublicMutable, AztecAddress}};
     use dep::std::hash::pedersen_hash;
+    use dep::std::collections::bounded_vec::BoundedVec;
+    use dep::std::collections::vec::Vec;
+    // use crate::types::bounded_vec_wrapper::AddressVec;
+
+
 
 
     #[aztec(storage)]
@@ -138,5 +144,31 @@ contract PublicGroups {
         storage.group_balances.at(key).write(amount_to_write.to_field());
     }
 
-    
+
+    //same as the above but with a fixed vector of addresses
+    #[aztec(public)]
+    fn split_group_balance(creditor: AztecAddress, debtors: [AztecAddress; 10], participants: u64, amount: u64) {
+        assert(creditor == context.msg_sender(), "cannot adjust someone else's balances");
+        assert(storage.group_members.at(creditor).read() == true, "Must be part of the group");
+
+        // //calculate the amount per participant
+        let amount_per_participant = amount / (participants as u64 + 1);
+
+        // //update the balances
+        for i in 0..10 {
+            let debtor = debtors[i as u32];
+            if (debtor.is_zero()) {
+                continue;
+            } else {
+                assert(storage.group_members.at(debtor).read() == true, "Debtor is not part of the group");
+                let key = pedersen_hash([creditor.to_field(), debtor.to_field()]);
+                let current_balance = storage.group_balances.at(key).read() as u64;
+                let new_balance = current_balance + amount_per_participant;
+                storage.group_balances.at(key).write(new_balance.to_field());
+            }
+        }
+    }
 }
+
+//can bypass the whole making a bounded vec and just use an array of addresses
+//skip if the address is zero.

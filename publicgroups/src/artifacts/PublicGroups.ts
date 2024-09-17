@@ -104,7 +104,7 @@ export class PublicGroupsContract extends ContractBase {
   }
   
 
-  public static get storage(): ContractStorageLayout<'admin' | 'group_members' | 'group_balances'> {
+  public static get storage(): ContractStorageLayout<'admin' | 'group_members' | 'group_balances' | 'member_count'> {
       return {
         admin: {
       slot: new Fr(1n),
@@ -114,8 +114,11 @@ group_members: {
     },
 group_balances: {
       slot: new Fr(3n),
+    },
+member_count: {
+      slot: new Fr(4n),
     }
-      } as ContractStorageLayout<'admin' | 'group_members' | 'group_balances'>;
+      } as ContractStorageLayout<'admin' | 'group_members' | 'group_balances' | 'member_count'>;
     }
     
 
@@ -155,8 +158,17 @@ ValueNote: {
     /** make_payment(creditor: struct, debtor: struct, amount: integer) */
     make_payment: ((creditor: AztecAddressLike, debtor: AztecAddressLike, amount: (bigint | number)) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
 
+    /** member_count() */
+    member_count: (() => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+
+    /** remove_from_group(member: struct, approve: boolean) */
+    remove_from_group: ((member: AztecAddressLike, approve: boolean) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+
     /** set_balance(creditor: struct, debtor: struct, amount: field) */
     set_balance: ((creditor: AztecAddressLike, debtor: AztecAddressLike, amount: FieldLike) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
+
+    /** split_group_balance(creditor: struct, debtors: array, participants: integer, amount: integer) */
+    split_group_balance: ((creditor: AztecAddressLike, debtors: AztecAddressLike[], participants: (bigint | number), amount: (bigint | number)) => ContractFunctionInteraction) & Pick<ContractMethod, 'selector'>;
   };
 
   
