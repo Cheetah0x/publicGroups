@@ -125,10 +125,10 @@ member_count: {
   public static get notes(): ContractNotes<'AddressNote' | 'ValueNote'> {
     return {
       AddressNote: {
-          id: new NoteSelector(1747431984),
+          id: new NoteSelector(2232136525),
         },
 ValueNote: {
-          id: new NoteSelector(1900156023),
+          id: new NoteSelector(1038582377),
         }
     } as ContractNotes<'AddressNote' | 'ValueNote'>;
   }

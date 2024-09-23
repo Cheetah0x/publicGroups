@@ -21,6 +21,7 @@ contract PublicGroups {
         group_members: Map<AztecAddress, PublicMutable<bool>>,
         group_balances: Map<Field, PublicMutable<Field>>,
         member_count: PublicMutable<u64>,
+       
     }
 
     #[aztec(public)]
@@ -30,6 +31,9 @@ contract PublicGroups {
         storage.admin.write(admin);
         storage.group_members.at(admin).write(true);
         storage.member_count.write(1);
+
+        //emit event for the admin assignment
+        context.emit_unencrypted_log([admin.to_field()]);
     }
 
     //helper functions to read variables when testing
@@ -72,6 +76,9 @@ contract PublicGroups {
         storage.group_members.at(member).write(approve);
         if (approve) {
             storage.member_count.write(storage.member_count.read() + 1);
+
+            //emit event for the member addition
+            context.emit_unencrypted_log([member.to_field()]);
         }
     }
 
@@ -81,6 +88,9 @@ contract PublicGroups {
         storage.group_members.at(member).write(approve);
         if (approve) {
             storage.member_count.write(storage.member_count.read() - 1);
+
+            //emit event for the member removal
+            context.emit_unencrypted_log([member.to_field()]);
         }
     }
 
@@ -128,6 +138,9 @@ contract PublicGroups {
         }
         //if the balance is 0, then the creditor and debtor are even
         //the values should never go below 0 as as you are subtracting a larger number from a smaller one.
+
+        //emit event for the balance set
+        context.emit_unencrypted_log([creditor.to_field(), debtor.to_field(), amount.to_field()]);
     }
 
     #[aztec(public)]
@@ -142,6 +155,10 @@ contract PublicGroups {
         //subtract the amount from the creditor
         let amount_to_write = balance - amount;
         storage.group_balances.at(key).write(amount_to_write.to_field());
+
+        //emit event for the payment
+        context.emit_unencrypted_log([creditor.to_field(), debtor.to_field(), amount.to_field()]);
+
     }
 
 
@@ -165,8 +182,12 @@ contract PublicGroups {
                 let current_balance = storage.group_balances.at(key).read() as u64;
                 let new_balance = current_balance + amount_per_participant;
                 storage.group_balances.at(key).write(new_balance.to_field());
+
+                //emit event for the split
+                context.emit_unencrypted_log([creditor.to_field(), debtor.to_field(), amount_per_participant.to_field()]);
             }
         }
+
     }
 }
 

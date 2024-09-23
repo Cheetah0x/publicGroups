@@ -12,11 +12,11 @@
     "start": "yarn build && DEBUG='PublicGroups' node ./dest/index.js"
   },
   "dependencies": {
-    "@aztec/accounts": "^0.55.0",
-    "@aztec/aztec.js": "^0.55.0",
-    "@aztec/noir-contracts.js": "^0.55.0",
+    "@aztec/accounts": "0.55.1",
+    "@aztec/aztec.js": "0.55.1",
+    "@aztec/noir-contracts.js": "0.55.1",
     "@types/node": "^22.5.4",
-    "typescript": "^5.6.2"
+    "typescript": "^5.6.2",
+    "viem": "^2.21.9"
   }
-  
 }

@@ -1,17 +1,17 @@
-// src/contracts.mjs
+// src/PrivateGroups/contracts.mjs
 
 import { readFileSync } from "fs";
 import { AztecAddress, loadContractArtifact } from "@aztec/aztec.js";
 // import { PublicGroupsContract } from "../publicgroups/src/artifacts/PublicGroups.ts";
-import GroupContractJson from "../publicgroups/target/publicgroups-PublicGroups.json" assert { type: 'json' };
+import PrivateGroupContractJson from "../../contracts/privategroups/target/privategroups-PrivateGroups.json" assert { type: 'json' };
 import { Contract
  } from "@aztec/aztec.js";
 
-export async function getGroupContract(wallet) {
+export async function getPrivateGroupContract(wallet) {
   const addresses = JSON.parse(readFileSync('addresses.json'));
   return await Contract.at(
-    AztecAddress.fromString(addresses.group_contract),
-    loadContractArtifact(GroupContractJson),
+    AztecAddress.fromString(addresses.private_group_contract),
+    loadContractArtifact(PrivateGroupContractJson),
     wallet
   );
 }

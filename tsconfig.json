@@ -26,8 +26,8 @@
     "include": [
       "src/**/*.ts",
       "contracts/**/*.ts",
-      "publicgroups/**/*.ts",
-      "publicgroups/target/**/*.json", // Include JSON files
+      "contracts/publicgroups/**/*.ts",
+      "contracts/publicgroups/target/**/*.json", // Include JSON files
       "addresses.json"                 // Include if imported
     ],
     "exclude": ["node_modules", "dist", "build", "dest"]
