@@ -1,35 +1,28 @@
-use dep::aztec::prelude::{NoteInterface, NoteHeader, PrivateContext};
 use dep::aztec::{
-    note::{utils::compute_note_hash_for_nullify}, keys::getters::get_nsk_app,
-    protocol_types::{traits::Serialize, constants::GENERATOR_INDEX__NOTE_NULLIFIER, hash::poseidon2_hash_with_separator}
+    protocol_types::{
+    address::AztecAddress, traits::Serialize, constants::GENERATOR_INDEX__NOTE_NULLIFIER,
+    hash::poseidon2_hash_with_separator
+},
+    macros::notes::note,
+    note::{note_header::NoteHeader, note_interface::NullifiableNote, utils::compute_note_hash_for_nullify},
+    oracle::unsafe_rand::unsafe_rand, keys::getters::get_nsk_app, context::PrivateContext
 };
-use dep::aztec::{prelude::{Map, PublicMutable, AztecAddress, PrivateImmutable, PrivateMutable}};
-
 
 global ADDRESS_NOTE_LEN: u32 = 3;
 // CARD_NOTE_LEN * 32 + 32(storage_slot as bytes) + 32(note_type_id as bytes)
 global ADDRESS_NOTE_BYTES_LEN: u32 = 3 * 32 + 64;
 
-// docs:start:state_vars-CardNote
-#[aztec(note)]
+#[note]
+#[derive(Serialize)]
 struct NewAddressNote {
     address: AztecAddress,
     shared_secret: Field,
     // The nullifying public key hash is used with the nsk_app to ensure that the note can be privately spent.
     npk_m_hash: Field,
 }
-// docs:end:state_vars-CardNote
 
-// docs:start:cardnote_impl
-impl NewAddressNote {
-    pub fn new(address: AztecAddress, shared_secret: Field, npk_m_hash: Field) -> Self {
-        NewAddressNote { address, shared_secret, npk_m_hash, header: NoteHeader::empty() }
-    }
-}
-// docs:end:cardnote_impl
+impl NullifiableNote for NewAddressNote {
 
-// docs:start:note_interface
-impl NoteInterface<ADDRESS_NOTE_LEN, ADDRESS_NOTE_BYTES_LEN> for NewAddressNote {
     fn compute_nullifier(self, context: &mut PrivateContext, note_hash_for_nullify: Field) -> Field {
         let secret = context.request_nsk_app(self.npk_m_hash);
         poseidon2_hash_with_separator(
@@ -41,7 +34,7 @@ impl NoteInterface<ADDRESS_NOTE_LEN, ADDRESS_NOTE_BYTES_LEN> for NewAddressNote 
         )
     }
 
-    fn compute_nullifier_without_context(self) -> Field {
+    unconstrained fn compute_nullifier_without_context(self) -> Field {
         let note_hash_for_nullify = compute_note_hash_for_nullify(self);
         let secret = get_nsk_app(self.npk_m_hash);
         poseidon2_hash_with_separator(
@@ -53,15 +46,13 @@ impl NoteInterface<ADDRESS_NOTE_LEN, ADDRESS_NOTE_BYTES_LEN> for NewAddressNote 
         )
     }
 }
-// docs:end:note_interface
 
-// docs:start:serialize
-impl Serialize<3> for NewAddressNote {
-    fn serialize(self) -> [Field; 3] {
-        [self.address.to_field(), self.shared_secret, self.npk_m_hash.to_field()]
+impl NewAddressNote {
+    pub fn new(address: AztecAddress, shared_secret: Field, npk_m_hash: Field) -> Self {
+        let header = NoteHeader::empty();
+        NewAddressNote { address, shared_secret, npk_m_hash, header }
     }
 }
-// docs:end:serialize
 
 impl Eq for NewAddressNote {
     fn eq(self, other: Self) -> bool {
@@ -70,3 +61,11 @@ impl Eq for NewAddressNote {
             & (self.npk_m_hash == other.npk_m_hash)
     }
 }
+
+//serialize is a macro now?
+// impl Serialize<3> for NewAddressNote {
+//     fn serialize(self) -> [Field; 3] {
+//         [self.address.to_field(), self.shared_secret, self.npk_m_hash.to_field()]
+//     }
+// }
+

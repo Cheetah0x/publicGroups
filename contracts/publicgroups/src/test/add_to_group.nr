@@ -8,16 +8,20 @@ use dep::std;
 
 #[test]
 unconstrained fn add_group_member_success() {
-    std::println("setting up contract");
+
     let (mut env, group_contract_address, admin, alice) = utils::setup(true);
 
+    std::println("Impersonating admin");
     env.impersonate(admin);
 
+    std::println("Adding Alice to the group");
     let add_alice_interface = PublicGroups::at(group_contract_address).add_to_group(alice, true);
     env.call_public(add_alice_interface);
+    std::println("Call to add_to_group completed");
 
-    // // Verify that Alice is now in the group
+    std::println("Checking if Alice is in the group");
     let check_membership_interface = PublicGroups::at(group_contract_address).in_group(alice);
     let is_member = env.call_public(check_membership_interface);
-    assert(is_member == true, "Alice is not member");
+    std::println(f"Alice membership status: {is_member}");
+    assert(is_member == true, "Alice is not a member");
 }

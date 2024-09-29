@@ -27,6 +27,10 @@ async function main() {
     const adminAddress = adminWallet.getAddress();
     const aliceAddress = aliceWallet.getAddress();
     const bobAddress = bobWallet.getAddress();
+
+    console.log("adminCompleteAddress", adminAddress);
+    console.log("adminAddress", adminAddress);
+    console.log("aliceAddress", aliceAddress);
     
     // const groupMembers = [adminAddress,aliceAddress, bobAddress, AztecAddress.ZERO,AztecAddress.ZERO];
     const groupMembers = [adminAddress,aliceAddress];
@@ -45,19 +49,17 @@ async function main() {
         adminWallet,
         PrivateGroupContractArtifact,
         [adminCompleteAddress, groupMembers, sharedSecret]
-      ).send();
+      ).send().deployed();
       
     console.log('Transaction sent. Waiting for confirmation...');
 
-    const deployedContract = await private_group_contract.deployed();
-    console.log(`Contract deployed at ${deployedContract.address.toString()}`);
+    // const deployedContract = await private_group_contract.deployed();
+    // console.log(`Contract deployed at ${deployedContract.address.toString()}`);
 
+    console.log(
+      `Private group contract deployed at ${private_group_contract.address.toString()}`
+    );
 
-  
-
-  console.log(
-    `Private group contract deployed at ${private_group_contract.address.toString()}`
-  );
 
   const addresses = { private_group_contract: private_group_contract.address.toString() };
   writeFileSync("addresses.json", JSON.stringify(addresses, null, 2));

@@ -1,180 +1,161 @@
-// mod test;
-// mod types;
+mod test;
 
-//this will be a little test to make public groups in noir
+use dep::aztec::macros::aztec;
 
-
+#[aztec]
 contract PublicGroups {
 
-    use dep::aztec::{prelude::{Map, PublicMutable, AztecAddress}};
+    use dep::aztec::{
+        prelude::{Map, PublicMutable, AztecAddress},
+        macros::{storage::storage, events::event, functions::{public, initializer, private, internal, view}}
+    };
     use dep::std::hash::pedersen_hash;
     use dep::std::collections::bounded_vec::BoundedVec;
     use dep::std::collections::vec::Vec;
-    // use crate::types::bounded_vec_wrapper::AddressVec;
 
-
-
-
-    #[aztec(storage)]
-    struct Storage {
-        admin: PublicMutable<AztecAddress>,
-        group_members: Map<AztecAddress, PublicMutable<bool>>,
-        group_balances: Map<Field, PublicMutable<Field>>,
-        member_count: PublicMutable<u64>,
-       
+    #[storage]
+    struct Storage<Context> {
+        admin: PublicMutable<AztecAddress, Context>,
+        group_members: Map<AztecAddress, PublicMutable<bool, Context>, Context>,
+        group_balances: Map<Field, PublicMutable<Field, Context>, Context>,
+        member_count: PublicMutable<u64, Context>,
     }
 
-    #[aztec(public)]
-    #[aztec(initializer)]
+    #[public]
+    #[initializer]
     fn constructor(admin: AztecAddress) {
         assert(!admin.is_zero(), "invalid admin");
         storage.admin.write(admin);
         storage.group_members.at(admin).write(true);
         storage.member_count.write(1);
 
-        //emit event for the admin assignment
+        // Emit event for the admin assignment
         context.emit_unencrypted_log([admin.to_field()]);
     }
 
-    //helper functions to read variables when testing
+    // Helper functions to read variables when testing
 
-    //read the admin
-    #[aztec(public)]
-    #[aztec(view)]
-    fn admin() -> Field {
+    // Read the admin
+    #[public]
+    #[view]
+    fn admin() -> pub Field {
         storage.admin.read().to_field()
     }
 
-    //read the group members
-    #[aztec(public)]
-    #[aztec(view)]
-    fn in_group(group_member: AztecAddress) -> bool {
+    // Read the group members
+    #[public]
+    #[view]
+    fn in_group(group_member: AztecAddress) -> pub bool {
         storage.group_members.at(group_member).read()
     }
 
-
-    //read the member count
-    #[aztec(public)]
-    #[aztec(view)]
-    fn member_count() -> u64 {
+    // Read the member count
+    #[public]
+    #[view]
+    fn member_count() -> pub u64 {
         storage.member_count.read()
     }
 
-    //read the balance between two addresses
-    #[aztec(public)]
-    #[aztec(view)]
-    fn balance(creditor: AztecAddress, debtor: AztecAddress) -> Field {
+    // Read the balance between two addresses
+    #[public]
+    #[view]
+    fn balance(creditor: AztecAddress, debtor: AztecAddress) -> pub Field {
         let key = pedersen_hash([creditor.to_field(), debtor.to_field()]);
         storage.group_balances.at(key).read()
     }
 
-    //functional methods
+    // Functional methods
 
-     #[aztec(public)]
+    #[public]
     fn add_to_group(member: AztecAddress, approve: bool) {
         assert(storage.admin.read().eq(context.msg_sender()), "caller is not admin");
         storage.group_members.at(member).write(approve);
-        if (approve) {
+        if approve {
             storage.member_count.write(storage.member_count.read() + 1);
 
-            //emit event for the member addition
+            // Emit event for the member addition
             context.emit_unencrypted_log([member.to_field()]);
         }
     }
 
-     #[aztec(public)]
+    #[public]
     fn remove_from_group(member: AztecAddress, approve: bool) {
         assert(storage.admin.read().eq(context.msg_sender()), "caller is not admin");
         storage.group_members.at(member).write(approve);
-        if (approve) {
+        if approve {
             storage.member_count.write(storage.member_count.read() - 1);
 
-            //emit event for the member removal
+            // Emit event for the member removal
             context.emit_unencrypted_log([member.to_field()]);
         }
     }
 
-    //this set balances but only between two people
-    #[aztec(public)]
+    // This sets balances but only between two people
+    #[public]
     fn set_balance(creditor: AztecAddress, debtor: AztecAddress, amount: Field) {
-        assert(creditor == context.msg_sender(), "cannot adjust someone elses balances");
+        assert(creditor == context.msg_sender(), "cannot adjust someone else's balances");
         assert(storage.group_members.at(creditor).read() == true, "Creditor is not in group");
         assert(storage.group_members.at(debtor).read() == true, "Debtor is not in group");
 
-        //cant store the addresses in a tuple in storage so hash them together,
-        //easy to know who owes who as hash a,b is different from hash b,a
+        // Hash the addresses together
         let key = pedersen_hash([creditor.to_field(), debtor.to_field()]);
-        let balance = storage.group_balances.at(pedersen_hash([creditor.to_field(), debtor.to_field()])).read();
+        let balance = storage.group_balances.at(key).read();
         let amount_to_write = amount + balance;
         storage.group_balances.at(key).write(amount_to_write);
 
-        //adjust the balances
-        //balance between creditor and debtor
+        // Adjust the balances
         let creditor_debtor_hash = pedersen_hash([creditor.to_field(), debtor.to_field()]);
         let balance_creditor_debtor = storage.group_balances.at(creditor_debtor_hash).read() as u64;
 
-        //balance between debtor and creditor
         let debtor_creditor_hash = pedersen_hash([debtor.to_field(), creditor.to_field()]);
         let balance_debtor_creditor = storage.group_balances.at(debtor_creditor_hash).read() as u64;
 
-        //if the balance is greater than 0, then the creditor owes the debtor that amount
-        if (balance_creditor_debtor > balance_debtor_creditor) {
+        if balance_creditor_debtor > balance_debtor_creditor {
             let difference = balance_creditor_debtor - balance_debtor_creditor;
             storage.group_balances.at(creditor_debtor_hash).write(difference.to_field());
             storage.group_balances.at(debtor_creditor_hash).write(0.to_field());
         }
 
-        //if the balance is less than 0, then the debtor owes the creditor that amount
-        if (balance_debtor_creditor > balance_creditor_debtor) {
+        if balance_debtor_creditor > balance_creditor_debtor {
             let difference = balance_debtor_creditor - balance_creditor_debtor;
             storage.group_balances.at(debtor_creditor_hash).write(difference.to_field());
             storage.group_balances.at(creditor_debtor_hash).write(0.to_field());
         }
 
-        if (balance_creditor_debtor == balance_debtor_creditor) {
+        if balance_creditor_debtor == balance_debtor_creditor {
             storage.group_balances.at(creditor_debtor_hash).write(0.to_field());
             storage.group_balances.at(debtor_creditor_hash).write(0.to_field());
-            //this is not setting them to 0
         }
-        //if the balance is 0, then the creditor and debtor are even
-        //the values should never go below 0 as as you are subtracting a larger number from a smaller one.
 
-        //emit event for the balance set
+        // Emit event for the balance set
         context.emit_unencrypted_log([creditor.to_field(), debtor.to_field(), amount.to_field()]);
     }
 
-    #[aztec(public)]
+    #[public]
     fn make_payment(creditor: AztecAddress, debtor: AztecAddress, amount: u64) {
         assert(storage.group_members.at(creditor).read() == true, "Creditor is not in group");
         assert(storage.group_members.at(debtor).read() == true, "Debtor is not in group");
-        //make sure the payment is less than  or equal to the balance
         let key = pedersen_hash([creditor.to_field(), debtor.to_field()]);
         let balance = storage.group_balances.at(key).read() as u64;
         assert(balance >= amount, "Insufficient balance, or paying more than is owed");
 
-        //subtract the amount from the creditor
         let amount_to_write = balance - amount;
         storage.group_balances.at(key).write(amount_to_write.to_field());
 
-        //emit event for the payment
+        // Emit event for the payment
         context.emit_unencrypted_log([creditor.to_field(), debtor.to_field(), amount.to_field()]);
-
     }
 
-
-    //same as the above but with a fixed vector of addresses
-    #[aztec(public)]
+    #[public]
     fn split_group_balance(creditor: AztecAddress, debtors: [AztecAddress; 10], participants: u64, amount: u64) {
         assert(creditor == context.msg_sender(), "cannot adjust someone else's balances");
         assert(storage.group_members.at(creditor).read() == true, "Must be part of the group");
 
-        // //calculate the amount per participant
         let amount_per_participant = amount / (participants as u64 + 1);
 
-        // //update the balances
         for i in 0..10 {
             let debtor = debtors[i as u32];
-            if (debtor.is_zero()) {
+            if debtor.is_zero() {
                 continue;
             } else {
                 assert(storage.group_members.at(debtor).read() == true, "Debtor is not part of the group");
@@ -183,13 +164,9 @@ contract PublicGroups {
                 let new_balance = current_balance + amount_per_participant;
                 storage.group_balances.at(key).write(new_balance.to_field());
 
-                //emit event for the split
+                // Emit event for the split
                 context.emit_unencrypted_log([creditor.to_field(), debtor.to_field(), amount_per_participant.to_field()]);
             }
         }
-
     }
 }
-
-//can bypass the whole making a bounded vec and just use an array of addresses
-//skip if the address is zero.

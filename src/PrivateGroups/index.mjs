@@ -10,6 +10,7 @@ import { getadmin } from './helpers/getadmin.mjs';
 import { getsecret, getsecretalice, getsecretbob } from './helpers/getsecret.mjs';
 import { getnewsharedsecretadmin, getnewsharedsecretalice, getnewsharedsecretbob } from './helpers/getnewsharedsecret.mjs';
 import { getGroupMemberAdmin, getGroupMemberAlice, getGroupMemberBob, getGroupMemberFail } from './helpers/getGroupembers.mjs';
+import { set_Initial_Balance_Admin_Alice, get_Initial_Balance_Admin_Alice,  make_Payment_Alice_Admin, get_alice_debt } from './helpers/Payments.mjs';
 const { PXE_URL = 'http://localhost:8080' } = process.env;
 
 async function main() {
@@ -66,7 +67,31 @@ async function main() {
     console.log("admin fetching alice address");
     await getGroupMemberAdmin(private_group_contract_admin, aliceAddress);
 
+    //set initial balance of admin and alice
+    const amount = 100;
+
+    await set_Initial_Balance_Admin_Alice(private_group_contract_admin, adminAddress, aliceAddress, amount);
+    //get initial balance of admin and alice
+
+    await get_Initial_Balance_Admin_Alice(private_group_contract_admin, adminAddress, aliceAddress);
+    await get_alice_debt(private_group_contract_alice, adminAddress, aliceAddress);
+    // await get_Balance_Alice_Admin(private_group_contract_admin, aliceAddress, adminAddress);
+    // console.log("getting balance of how much alice owes admin");
+    // await get_Balance_Alice_Admin(private_group_contract_alice, aliceAddress, adminAddress);
+
+    //make a payment from alice to admin
+
+    const amount1 = 50;
+    await make_Payment_Alice_Admin(private_group_contract_alice, adminAddress, aliceAddress, amount1);
+    await get_Initial_Balance_Admin_Alice(private_group_contract_admin, adminAddress, aliceAddress);
+    await get_alice_debt(private_group_contract_alice, adminAddress, aliceAddress);
+    //get balance of alice and admin
+
+    // await get_Initial_Balance_Admin_Alice(private_group_contract_admin, adminAddress, aliceAddress);
+
   }
 }
 
 main();
+
+

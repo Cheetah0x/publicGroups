@@ -8,7 +8,10 @@ use dep::std;
 unconstrained fn check_admin() {
     let (mut env, group_contract_address, admin, alice) = utils::setup(true);
 
-    env.impersonate(admin);
+    env.impersonate(group_contract_address);
+    let two = 2;
+    assert(two == 2, "two is not two");
+
 
 
     //check the admin is being made correctly
