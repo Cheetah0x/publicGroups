@@ -1,4 +1,5 @@
 mod types;
+mod test;
 
 use dep::aztec::macros::aztec;
 
@@ -109,6 +110,10 @@ contract PrivateGroups {
         shared_secret_note.string
     }
 
+    //TODO:: change the creditor to from
+    // change the debtor to to, this makes it easy to keep track of the notes
+    // outgoing will be from
+    // incoming will be to
     #[private]
     fn set_balance(creditor: AztecAddress, debtor: AztecAddress, amount: Field) {
         //do not do any assertions for now
@@ -269,4 +274,15 @@ contract PrivateGroups {
     //         compute_recurse_subtract_balance_call(*context, account, remaining).call(context)
     //     }
     // }
+
+    unconstrained pub(crate) fn admin() -> pub AztecAddress {
+        let admin_note: NewAddressNote = storage.admin.view_note();
+        admin_note.address
+    }
 }
+
+
+//new ideas for things are gonna be in the paper i wrote
+// also have ideas for having a storage slot with the block number of the payments made to have an offset of the number of payments made
+// once a payment has been made and the balance between two users is 0, then can set the blocknumber to get notes from as the block number of the last payment + 1.
+//this means that you only get notes from this block, and could be an easy way to keep within the limits of the number of notes that can be stored which is 16 at the minute. 

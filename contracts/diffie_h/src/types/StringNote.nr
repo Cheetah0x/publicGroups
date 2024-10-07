@@ -1,6 +1,6 @@
 use dep::aztec::{
     protocol_types::{
-    address::AztecAddress, traits::{Serialize,Deserialize}, constants::GENERATOR_INDEX__NOTE_NULLIFIER,
+    address::AztecAddress, traits::Serialize, constants::GENERATOR_INDEX__NOTE_NULLIFIER,
     hash::poseidon2_hash_with_separator
 },
     macros::notes::note,
@@ -8,21 +8,20 @@ use dep::aztec::{
     oracle::unsafe_rand::unsafe_rand, keys::getters::get_nsk_app, context::PrivateContext
 };
 
-global ADDRESS_NOTE_LEN: u32 = 3;
-// CARD_NOTE_LEN * 32 + 32(storage_slot as bytes) + 32(note_type_id as bytes)
-global ADDRESS_NOTE_BYTES_LEN: u32 = 3 * 32 + 64;
+//going to make the max length 10 characters just to keep it simple
+//pretty sure the only thing that this changes is the amount of compute needed
+global STRING_NOTE_LENGTH: Field = 3;
+global STRING_NOTE_BYTES_LENGTH: Field = 3 * 32 + 64;
 
 #[note]
 #[derive(Serialize)]
-#[derive(Deserialize)]
-struct NewAddressNote {
-    address: AztecAddress,
-    shared_secret: Field,
-    // The nullifying public key hash is used with the nsk_app to ensure that the note can be privately spent.
+struct StringNote { 
+    string: Field,
+    randomness: Field,
     npk_m_hash: Field,
 }
 
-impl NullifiableNote for NewAddressNote {
+impl NullifiableNote for StringNote {
 
     fn compute_nullifier(self, context: &mut PrivateContext, note_hash_for_nullify: Field) -> Field {
         let secret = context.request_nsk_app(self.npk_m_hash);
@@ -48,25 +47,25 @@ impl NullifiableNote for NewAddressNote {
     }
 }
 
-impl NewAddressNote {
-    pub fn new(address: AztecAddress, shared_secret: Field, npk_m_hash: Field) -> Self {
+impl StringNote {
+    pub fn new(string: Field, npk_m_hash: Field) -> Self {
+        let randomness = unsafe_rand();
         let header = NoteHeader::empty();
-        NewAddressNote { address, shared_secret, npk_m_hash, header }
+        StringNote { string, randomness, npk_m_hash, header }
     }
 }
 
-impl Eq for NewAddressNote {
+impl Eq for StringNote {
     fn eq(self, other: Self) -> bool {
-        (self.address == other.address)
-            & (self.shared_secret == other.shared_secret)
+        (self.string == other.string)
+            & (self.randomness == other.randomness)
             & (self.npk_m_hash == other.npk_m_hash)
     }
 }
 
-//serialize is a macro now?
-// impl Serialize<3> for NewAddressNote {
-//     fn serialize(self) -> [Field; 3] {
-//         [self.address.to_field(), self.shared_secret, self.npk_m_hash.to_field()]
-//     }
-// }
-
+//dont think i need serialise because of new macro
+impl Serialize<3> for StringNote {
+    fn serialize(self) -> [Field; 3] {
+        [self.string, self.randomness, self.npk_m_hash.to_field()]
+    }
+}

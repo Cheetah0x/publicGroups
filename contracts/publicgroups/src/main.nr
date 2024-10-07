@@ -3,15 +3,13 @@ mod test;
 use dep::aztec::macros::aztec;
 
 #[aztec]
-contract PublicGroups {
+contract SplitwisePub {
 
     use dep::aztec::{
         prelude::{Map, PublicMutable, AztecAddress},
-        macros::{storage::storage, events::event, functions::{public, initializer, private, internal, view}}
+        macros::{storage::storage, events::event, functions::{public, initializer, internal, view}}
     };
     use dep::std::hash::pedersen_hash;
-    use dep::std::collections::bounded_vec::BoundedVec;
-    use dep::std::collections::vec::Vec;
 
     #[storage]
     struct Storage<Context> {
